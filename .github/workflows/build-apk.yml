@@ -1,0 +1,54 @@
+
+name: BloodMC Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**.gradle'
+      - '**.java'
+      - '**.xml'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build APK
+        run: |
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          elif [ -f ./BloodMC_Monitor_Android/gradlew ]; then
+            cd BloodMC_Monitor_Android
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          else
+            echo "Gradle project not found"
+            exit 1
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloodMC-Android-APK
+          path: |
+            **/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          
