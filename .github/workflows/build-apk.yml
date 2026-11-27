@@ -4,47 +4,47 @@ name: BloodMC Android Build
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build BloodMC APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Android Licenses
+      - name: Accept Licenses
         run: yes | sdkmanager --licenses || true
 
-      - name: Locate Android Project
+      - name: Find Android Project
+        shell: bash
         run: |
+          echo "Repository files:"
+          find . -maxdepth 3 -type f | head -100
+
           if [ -f gradlew ]; then
-            echo "PROJECT_DIR=." >> $GITHUB_ENV
+            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
           elif [ -f BloodMC_Monitor_Android/gradlew ]; then
-            echo "PROJECT_DIR=BloodMC_Monitor_Android" >> $GITHUB_ENV
+            echo "PROJECT_DIR=BloodMC_Monitor_Android" >> "$GITHUB_ENV"
           else
-            echo "ERROR: Android Gradle project not found."
-            echo "A ZIP file alone is not an Android project."
+            echo "No Gradle project found."
             exit 1
           fi
 
-      - name: Build Debug APK
+      - name: Build APK
         run: |
           cd "$PROJECT_DIR"
           chmod +x gradlew
@@ -53,9 +53,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BloodMC-Android-APK
-          path: |
-            **/build/outputs/apk/debug/*.apk
+          name: BloodMC-APK
+          path: '**/build/outputs/apk/debug/*.apk'
           if-no-files-found: error
-          retention-days: 14
           
