@@ -23,24 +23,23 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Configure Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
       - name: Find Android Project
         shell: bash
         run: |
-          echo "Repository files:"
-          find . -maxdepth 3 -type f | head -100
+          find . -maxdepth 4 -name gradlew -type f
 
           if [ -f gradlew ]; then
             echo "PROJECT_DIR=." >> "$GITHUB_ENV"
           elif [ -f BloodMC_Monitor_Android/gradlew ]; then
             echo "PROJECT_DIR=BloodMC_Monitor_Android" >> "$GITHUB_ENV"
           else
-            echo "No Gradle project found."
+            echo "ERROR: No Android Gradle project found."
             exit 1
           fi
 
@@ -53,7 +52,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BloodMC-APK
+          name: BloodMC-Android-APK
           path: '**/build/outputs/apk/debug/*.apk'
           if-no-files-found: error
           
